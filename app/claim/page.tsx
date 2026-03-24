@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Shield, CheckCircle } from 'lucide-react';
 import { siteConfig } from '@/lib/config';
 import { supabase, submitClaim, type Business } from '@/lib/supabase';
 
-export default function ClaimPage() {
+function ClaimForm() {
   const searchParams = useSearchParams();
   const preselectedSlug = searchParams.get('business');
 
@@ -33,7 +33,6 @@ export default function ClaimPage() {
 
       if (data) {
         setBusinesses(data as Business[]);
-        // Pre-select if coming from a business page
         if (preselectedSlug) {
           const match = data.find((b: any) => b.slug === preselectedSlug);
           if (match) {
@@ -66,7 +65,7 @@ export default function ClaimPage() {
           Claim Submitted!
         </h1>
         <p className="text-marshall-500 text-lg mb-8">
-          We&apos;ll verify your ownership and get back to you within 24-48 hours. 
+          We&apos;ll verify your ownership and get back to you within 24-48 hours.
           Once verified, you&apos;ll have full control over your listing.
         </p>
         <a href="/businesses" className="btn-primary">
@@ -92,7 +91,6 @@ export default function ClaimPage() {
 
       <div className="card p-6 sm:p-8">
         <div className="space-y-5" role="form">
-          {/* Select Business */}
           <div>
             <label className="block text-sm font-semibold text-marshall-700 mb-1.5">
               Select Your Business <span className="text-brick-500">*</span>
@@ -115,7 +113,6 @@ export default function ClaimPage() {
             </p>
           </div>
 
-          {/* Owner Name */}
           <div>
             <label className="block text-sm font-semibold text-marshall-700 mb-1.5">
               Your Name <span className="text-brick-500">*</span>
@@ -130,7 +127,6 @@ export default function ClaimPage() {
             />
           </div>
 
-          {/* Owner Email */}
           <div>
             <label className="block text-sm font-semibold text-marshall-700 mb-1.5">
               Business Email <span className="text-brick-500">*</span>
@@ -145,7 +141,6 @@ export default function ClaimPage() {
             />
           </div>
 
-          {/* Owner Phone */}
           <div>
             <label className="block text-sm font-semibold text-marshall-700 mb-1.5">
               Phone Number
@@ -159,7 +154,6 @@ export default function ClaimPage() {
             />
           </div>
 
-          {/* Message */}
           <div>
             <label className="block text-sm font-semibold text-marshall-700 mb-1.5">
               Additional Information
@@ -173,7 +167,6 @@ export default function ClaimPage() {
             />
           </div>
 
-          {/* Submit */}
           <div className="pt-4">
             <button
               onClick={handleSubmit}
@@ -189,5 +182,17 @@ export default function ClaimPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ClaimPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center text-marshall-400">
+        Loading...
+      </div>
+    }>
+      <ClaimForm />
+    </Suspense>
   );
 }
