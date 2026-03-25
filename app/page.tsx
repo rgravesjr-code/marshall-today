@@ -19,13 +19,11 @@ export default async function HomePage() {
       {/* HERO SECTION */}
       {/* ============================================ */}
       <section className="relative overflow-hidden min-h-[520px] flex items-center">
-        {/* Hero background image — replaced by NEXT_PUBLIC_HERO_IMAGE env var or fallback gradient */}
+        {/* Hero background image */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: process.env.NEXT_PUBLIC_HERO_IMAGE
-              ? `url('${process.env.NEXT_PUBLIC_HERO_IMAGE}')`
-              : 'linear-gradient(135deg, #3d1f0a 0%, #1a3a1a 50%, #0d0e12 100%)'
+            backgroundImage: `url('https://zplhkxrafsxxbzzlujrc.supabase.co/storage/v1/object/public/marshall-today/hero-michigan-ave-sunset.jpg')`
           }}
         />
         {/* Dark overlay for text readability */}
