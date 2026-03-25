@@ -10,7 +10,12 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default async function BusinessesPage() {
+export default async function BusinessesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const [businesses, categories] = await Promise.all([
     getBusinesses(),
     getCategories(),
@@ -29,7 +34,7 @@ export default async function BusinessesPage() {
       </div>
 
       {/* Search + Grid */}
-      <BusinessSearch businesses={businesses} categories={categories} />
+      <BusinessSearch businesses={businesses} categories={categories} initialQuery={q || ''} />
     </div>
   );
 }

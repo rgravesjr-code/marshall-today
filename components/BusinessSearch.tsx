@@ -8,10 +8,11 @@ import BusinessCard from './BusinessCard';
 interface BusinessSearchProps {
   businesses: Business[];
   categories: Category[];
+  initialQuery?: string;
 }
 
-export default function BusinessSearch({ businesses, categories }: BusinessSearchProps) {
-  const [query, setQuery] = useState('');
+export default function BusinessSearch({ businesses, categories, initialQuery = '' }: BusinessSearchProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filtered = useMemo(() => {

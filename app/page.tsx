@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { ArrowRight, Search, MapPin, Star, Building2, Users } from 'lucide-react';
+import { ArrowRight, Star, Building2, Users } from 'lucide-react';
 import { siteConfig } from '@/lib/config';
 import { getBusinesses, getCategories } from '@/lib/supabase';
 import BusinessCard from '@/components/BusinessCard';
+import HeroSearch from '@/components/HeroSearch';
 
 export const revalidate = 60; // ISR: refresh every 60 seconds
 
@@ -17,63 +18,42 @@ export default async function HomePage() {
       {/* ============================================ */}
       {/* HERO SECTION */}
       {/* ============================================ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-marshall-900 via-marshall-950 to-forest-950">
-        {/* Subtle grain texture */}
-        <div className="absolute inset-0 opacity-20 bg-grain" />
+      <section className="relative overflow-hidden min-h-[520px] flex items-center">
+        {/* Hero background image — replaced by NEXT_PUBLIC_HERO_IMAGE env var or fallback gradient */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: process.env.NEXT_PUBLIC_HERO_IMAGE
+              ? `url('${process.env.NEXT_PUBLIC_HERO_IMAGE}')`
+              : 'linear-gradient(135deg, #3d1f0a 0%, #1a3a1a 50%, #0d0e12 100%)'
+          }}
+        />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/50" />
 
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-forest-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-marshall-500/10 rounded-full blur-3xl" />
+        <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28 text-center">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight drop-shadow-lg mb-3">
+            Shop Marshall
+          </h1>
+          <p className="text-xl sm:text-2xl text-white/90 font-sans mb-10 drop-shadow">
+            Shop Marshall Today!
+          </p>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-28 lg:py-36">
-          <div className="max-w-3xl">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-marshall-200 text-sm mb-6 animate-fade-in">
-              <MapPin size={14} />
-              <span>{siteConfig.city}, {siteConfig.state}</span>
-              <span className="text-marshall-400">&middot;</span>
-              <span>Est. {siteConfig.founded}</span>
+          <HeroSearch />
+
+          {/* Quick stats */}
+          <div className="mt-10 flex flex-wrap justify-center gap-6 sm:gap-10">
+            <div className="flex items-center gap-2 text-white/80">
+              <Building2 size={18} className="text-white/60" />
+              <span className="text-sm font-medium">Local Businesses</span>
             </div>
-
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight animate-fade-in">
-              Discover{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-marshall-300 to-marshall-400">
-                {siteConfig.city}
-              </span>
-              <br />
-              <span className="text-cream-300">One Business at a Time</span>
-            </h1>
-
-            <p className="mt-6 text-lg sm:text-xl text-marshall-300 max-w-xl leading-relaxed animate-fade-in animate-fade-in-delay-1">
-              {siteConfig.heroSubtitle} Explore local restaurants, shops, services, and hidden gems in our historic community.
-            </p>
-
-            {/* Search bar */}
-            <div className="mt-8 animate-fade-in animate-fade-in-delay-2">
-              <Link
-                href="/businesses"
-                className="group flex items-center gap-3 bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-5 py-4 max-w-lg transition-all"
-              >
-                <Search size={20} className="text-marshall-400" />
-                <span className="text-marshall-400 text-base">Search businesses, restaurants, services...</span>
-                <ArrowRight size={18} className="text-marshall-400 ml-auto group-hover:translate-x-1 transition-transform" />
-              </Link>
+            <div className="flex items-center gap-2 text-white/80">
+              <Star size={18} className="text-white/60" />
+              <span className="text-sm font-medium">Free Listings</span>
             </div>
-
-            {/* Quick stats */}
-            <div className="mt-10 flex flex-wrap gap-6 sm:gap-10 animate-fade-in animate-fade-in-delay-3">
-              <div className="flex items-center gap-2 text-marshall-300">
-                <Building2 size={18} className="text-forest-400" />
-                <span className="text-sm font-medium">Local Businesses</span>
-              </div>
-              <div className="flex items-center gap-2 text-marshall-300">
-                <Star size={18} className="text-marshall-400" />
-                <span className="text-sm font-medium">Free Listings</span>
-              </div>
-              <div className="flex items-center gap-2 text-marshall-300">
-                <Users size={18} className="text-forest-400" />
-                <span className="text-sm font-medium">Community Driven</span>
-              </div>
+            <div className="flex items-center gap-2 text-white/80">
+              <Users size={18} className="text-white/60" />
+              <span className="text-sm font-medium">Community Driven</span>
             </div>
           </div>
         </div>
