@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { siteConfig } from '@/lib/config';
 import type { Business } from '@/lib/supabase';
-import { Search, X, Eye, EyeOff, LogOut, ExternalLink } from 'lucide-react';
+import { Search, X, Eye, EyeOff, LogOut, ExternalLink, Pencil, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -51,6 +51,12 @@ export default function AdminPage() {
     router.push('/admin/login');
   }
 
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    await supabase.from('businesses').delete().eq('id', id);
+    setBusinesses(prev => prev.filter(b => b.id !== id));
+  }
+
   const filtered = businesses.filter((b) => {
     const matchSearch = !search.trim() ||
       b.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -88,6 +94,10 @@ export default function AdminPage() {
           <Link href="/" target="_blank"
             className="inline-flex items-center gap-1.5 text-sm text-marshall-500 hover:text-marshall-700 transition-colors">
             <ExternalLink size={15} /> View Site
+          </Link>
+          <Link href="/admin/businesses/new"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 bg-marshall-700 text-white rounded-lg hover:bg-marshall-800 transition-colors">
+            <Plus size={15} /> Add Business
           </Link>
           <button onClick={handleLogout}
             className="inline-flex items-center gap-1.5 text-sm text-marshall-500 hover:text-red-600 transition-colors">
@@ -181,10 +191,22 @@ export default function AdminPage() {
                   {/* View on site */}
                   {biz.is_published && (
                     <Link href={`/businesses/${biz.slug}`} target="_blank"
-                      className="text-marshall-400 hover:text-marshall-600 transition-colors shrink-0">
+                      className="text-marshall-400 hover:text-marshall-600 transition-colors shrink-0" title="View live listing">
                       <ExternalLink size={15} />
                     </Link>
                   )}
+
+                  {/* Edit */}
+                  <Link href={`/admin/businesses/${biz.id}`}
+                    className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 text-marshall-600 hover:text-marshall-900 hover:bg-marshall-100 border border-marshall-200 rounded-lg transition-colors shrink-0">
+                    <Pencil size={12} /> Edit
+                  </Link>
+
+                  {/* Delete */}
+                  <button onClick={() => handleDelete(biz.id, biz.name)}
+                    className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors shrink-0">
+                    <Trash2 size={12} /> Delete
+                  </button>
 
                   {/* Toggle ON/OFF */}
                   <button
