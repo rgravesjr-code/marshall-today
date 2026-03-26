@@ -1,234 +1,165 @@
-'use client';
-
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { siteConfig } from '@/lib/config';
-import type { Business } from '@/lib/supabase';
-import { Search, X, Eye, EyeOff, LogOut, ExternalLink, Pencil, Trash2, Plus } from 'lucide-react';
+import { Building2, Shield, Send, MessageSquare, Star, AlertTriangle, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AdminPage() {
-  const router = useRouter();
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'on' | 'off'>('all');
-  const [toggling, setToggling] = useState<string | null>(null);
+export const dynamic = 'force-dynamic';
 
-  const checkAuth = useCallback(async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) {
-      router.push('/admin/login');
-      return false;
-    }
-    return true;
-  }, [router]);
+async function getStats() {
+  const [
+    { count: totalBusinesses },
+    { count: publishedBusinesses },
+    { count: claimedBusinesses },
+    { count: pendingClaims },
+    { count: totalContacts },
+    { count: featuredBusinesses },
+  ] = await Promise.all([
+    supabase.from('businesses').select('*', { count: 'exact', head: true }),
+    supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('is_published', true),
+    supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('is_claimed', true),
+    supabase.from('claims').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('contact_log').select('*', { count: 'exact', head: true }),
+    supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('is_featured', true),
+  ]);
 
-  const fetchBusinesses = useCallback(async () => {
-    const { data } = await supabase
-      .from('businesses')
-      .select('*')
-      .order('city', { ascending: true })
-      .order('name', { ascending: true });
-    setBusinesses((data as Business[]) ?? []);
-    setLoading(false);
-  }, []);
+  return {
+    totalBusinesses: totalBusinesses || 0,
+    publishedBusinesses: publishedBusinesses || 0,
+    claimedBusinesses: claimedBusinesses || 0,
+    pendingClaims: pendingClaims || 0,
+    totalContacts: totalContacts || 0,
+    featuredBusinesses: featuredBusinesses || 0,
+  };
+}
 
-  useEffect(() => {
-    checkAuth().then((ok) => { if (ok) fetchBusinesses(); });
-  }, [checkAuth, fetchBusinesses]);
+async function getRecentClaims() {
+  const { data } = await supabase
+    .from('claims')
+    .select('*, businesses(name, slug)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+  return data || [];
+}
 
-  async function togglePublished(id: string, current: boolean) {
-    setToggling(id);
-    await supabase.from('businesses').update({ is_published: !current }).eq('id', id);
-    setBusinesses((prev) => prev.map((b) => b.id === id ? { ...b, is_published: !current } : b));
-    setToggling(null);
-  }
+async function getRecentContacts() {
+  const { data } = await supabase
+    .from('contact_log')
+    .select('*, businesses(name, slug)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+  return data || [];
+}
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push('/admin/login');
-  }
+export default async function AdminDashboardPage() {
+  const [stats, recentClaims, recentContacts] = await Promise.all([
+    getStats(),
+    getRecentClaims(),
+    getRecentContacts(),
+  ]);
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    await supabase.from('businesses').delete().eq('id', id);
-    setBusinesses(prev => prev.filter(b => b.id !== id));
-  }
-
-  const filtered = businesses.filter((b) => {
-    const matchSearch = !search.trim() ||
-      b.name.toLowerCase().includes(search.toLowerCase()) ||
-      b.city.toLowerCase().includes(search.toLowerCase()) ||
-      b.address?.toLowerCase().includes(search.toLowerCase()) || false;
-    const matchFilter =
-      filter === 'all' ||
-      (filter === 'on' && b.is_published) ||
-      (filter === 'off' && !b.is_published);
-    return matchSearch && matchFilter;
-  });
-
-  const onCount = businesses.filter((b) => b.is_published).length;
-  const offCount = businesses.filter((b) => !b.is_published).length;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-cream-50">
-        <p className="text-marshall-400 font-sans">Loading...</p>
-      </div>
-    );
-  }
+  const statCards = [
+    { label: 'Total Businesses', value: stats.totalBusinesses, icon: Building2, color: 'bg-forest-50 text-forest-600' },
+    { label: 'Published', value: stats.publishedBusinesses, icon: Star, color: 'bg-cream-200 text-marshall-600' },
+    { label: 'Claimed', value: stats.claimedBusinesses, icon: Shield, color: 'bg-forest-50 text-forest-600' },
+    { label: 'Pending Claims', value: stats.pendingClaims, icon: AlertTriangle, color: stats.pendingClaims > 0 ? 'bg-marshall-100 text-marshall-700' : 'bg-cream-100 text-marshall-500' },
+    { label: 'Featured', value: stats.featuredBusinesses, icon: Star, color: 'bg-marshall-50 text-marshall-600' },
+    { label: 'Contact Log Entries', value: stats.totalContacts, icon: MessageSquare, color: 'bg-cream-200 text-marshall-600' },
+  ];
 
   return (
-    <div className="min-h-screen bg-cream-50">
-      {/* Header */}
-      <div className="bg-white border-b border-marshall-100 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-marshall-900">{siteConfig.name} Admin</h1>
-          <p className="text-marshall-400 text-sm">
-            {businesses.length} businesses · {onCount} live · {offCount} hidden
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/" target="_blank"
-            className="inline-flex items-center gap-1.5 text-sm text-marshall-500 hover:text-marshall-700 transition-colors">
-            <ExternalLink size={15} /> View Site
-          </Link>
-          <Link href="/admin/businesses/new"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2 bg-marshall-700 text-white rounded-lg hover:bg-marshall-800 transition-colors">
-            <Plus size={15} /> Add Business
-          </Link>
-          <button onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 text-sm text-marshall-500 hover:text-red-600 transition-colors">
-            <LogOut size={15} /> Sign Out
-          </button>
-        </div>
+    <div>
+      <h1 className="font-display text-2xl font-bold text-marshall-900 mb-6">Dashboard</h1>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+        {statCards.map((stat) => (
+          <div key={stat.label} className="card p-4">
+            <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-3`}>
+              <stat.icon size={16} />
+            </div>
+            <div className="font-display text-2xl font-bold text-marshall-900">{stat.value}</div>
+            <div className="text-marshall-500 text-xs mt-0.5">{stat.label}</div>
+          </div>
+        ))}
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        {/* Search + filter */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-marshall-400" />
-            <input
-              type="text"
-              placeholder="Search by name, city, address..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-field pl-9 pr-8 py-2.5 text-sm"
-            />
-            {search && (
-              <button onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-marshall-400 hover:text-marshall-600">
-                <X size={15} />
-              </button>
-            )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Claims */}
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg font-semibold text-marshall-900">Recent Claims</h2>
+            <Link href="/admin/claims" className="text-forest-600 text-sm hover:underline">View all</Link>
           </div>
-          <div className="flex gap-2">
-            {(['all', 'on', 'off'] as const).map((f) => (
-              <button key={f} onClick={() => setFilter(f)}
-                className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  filter === f
-                    ? 'bg-marshall-700 text-white'
-                    : 'bg-white border border-marshall-200 text-marshall-600 hover:border-marshall-400'
-                }`}>
-                {f === 'all' ? `All (${businesses.length})` : f === 'on' ? `Live (${onCount})` : `Hidden (${offCount})`}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Business list */}
-        <div className="bg-white rounded-xl border border-marshall-100 overflow-hidden shadow-sm">
-          {filtered.length === 0 ? (
-            <div className="px-6 py-12 text-center text-marshall-400 font-sans text-sm">No businesses found.</div>
-          ) : (
-            <div className="divide-y divide-marshall-50">
-              {filtered.map((biz) => (
-                <div key={biz.id} className="flex items-center gap-4 px-5 py-3 hover:bg-cream-50 transition-colors">
-                  {/* Thumbnail */}
-                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-marshall-100 shrink-0 flex items-center justify-center">
-                    {biz.logo_url || biz.cover_image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={biz.logo_url || biz.cover_image_url || ''}
-                        alt={biz.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xl">🏢</span>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-marshall-900 text-sm truncate">{biz.name}</span>
-                      {biz.is_featured && (
-                        <span className="text-xs px-1.5 py-0.5 bg-marshall-100 text-marshall-600 rounded font-medium shrink-0">Featured</span>
-                      )}
+          {recentClaims.length > 0 ? (
+            <div className="space-y-3">
+              {recentClaims.map((claim: any) => (
+                <div key={claim.id} className="flex items-center justify-between py-2 border-b border-marshall-50 last:border-0">
+                  <div>
+                    <div className="font-medium text-sm text-marshall-900">
+                      {claim.businesses?.name || 'Unknown'}
                     </div>
-                    <div className="text-xs text-marshall-400 font-sans mt-0.5">
-                      {[biz.address, biz.city, biz.state].filter(Boolean).join(', ')}
+                    <div className="text-xs text-marshall-500">
+                      {claim.owner_name} · {claim.owner_email}
                     </div>
                   </div>
-
-                  {/* City badge (for multi-city) */}
-                  <span className="hidden sm:block text-xs px-2 py-1 bg-cream-200 text-marshall-600 rounded font-medium shrink-0">
-                    {biz.city}
-                  </span>
-
-                  {/* Plan */}
-                  <span className={`hidden md:block text-xs px-2 py-1 rounded font-medium shrink-0 capitalize ${
-                    biz.plan_tier === 'ultimate' ? 'bg-marshall-700 text-white' :
-                    biz.plan_tier === 'spotlight' ? 'bg-forest-100 text-forest-700' :
-                    'bg-cream-200 text-marshall-500'
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    claim.status === 'pending' ? 'bg-marshall-100 text-marshall-700' :
+                    claim.status === 'verified' ? 'bg-forest-50 text-forest-700' :
+                    'bg-brick-50 text-brick-700'
                   }`}>
-                    {biz.plan_tier}
+                    {claim.status}
                   </span>
-
-                  {/* View on site */}
-                  {biz.is_published && (
-                    <Link href={`/businesses/${biz.slug}`} target="_blank"
-                      className="text-marshall-400 hover:text-marshall-600 transition-colors shrink-0" title="View live listing">
-                      <ExternalLink size={15} />
-                    </Link>
-                  )}
-
-                  {/* Edit */}
-                  <Link href={`/admin/businesses/${biz.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 text-marshall-600 hover:text-marshall-900 hover:bg-marshall-100 border border-marshall-200 rounded-lg transition-colors shrink-0">
-                    <Pencil size={12} /> Edit
-                  </Link>
-
-                  {/* Delete */}
-                  <button onClick={() => handleDelete(biz.id, biz.name)}
-                    className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 border border-red-200 rounded-lg transition-colors shrink-0">
-                    <Trash2 size={12} /> Delete
-                  </button>
-
-                  {/* Toggle ON/OFF */}
-                  <button
-                    onClick={() => togglePublished(biz.id, biz.is_published)}
-                    disabled={toggling === biz.id}
-                    title={biz.is_published ? 'Click to hide from directory' : 'Click to show in directory'}
-                    className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shrink-0 disabled:opacity-50 ${
-                      biz.is_published
-                        ? 'bg-forest-50 text-forest-700 hover:bg-red-50 hover:text-red-600 border border-forest-200 hover:border-red-200'
-                        : 'bg-red-50 text-red-500 hover:bg-forest-50 hover:text-forest-700 border border-red-200 hover:border-forest-200'
-                    }`}>
-                    {biz.is_published ? <><Eye size={13} /> Live</> : <><EyeOff size={13} /> Hidden</>}
-                  </button>
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-marshall-400 text-sm">No claims yet.</p>
           )}
         </div>
 
-        <p className="text-center text-marshall-300 text-xs font-sans mt-6">
-          Showing {filtered.length} of {businesses.length} businesses
-        </p>
+        {/* Recent Contact Log */}
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg font-semibold text-marshall-900">Recent Outreach</h2>
+            <Link href="/admin/responses" className="text-forest-600 text-sm hover:underline">View all</Link>
+          </div>
+          {recentContacts.length > 0 ? (
+            <div className="space-y-3">
+              {recentContacts.map((contact: any) => (
+                <div key={contact.id} className="flex items-center justify-between py-2 border-b border-marshall-50 last:border-0">
+                  <div>
+                    <div className="font-medium text-sm text-marshall-900">
+                      {contact.businesses?.name || 'Unknown'}
+                    </div>
+                    <div className="text-xs text-marshall-500">
+                      {contact.subject || contact.contact_type} · {new Date(contact.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-cream-200 text-marshall-600 font-medium">
+                    {contact.contact_type}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-marshall-400 text-sm">No outreach logged yet.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Quick actions */}
+      <div className="mt-8 card p-6">
+        <h2 className="font-display text-lg font-semibold text-marshall-900 mb-4">Quick Actions</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link href="/admin/outreach" className="btn-primary text-sm">
+            <Send size={16} className="mr-2" /> Send Outreach Email
+          </Link>
+          <Link href="/admin/claims" className="btn-secondary text-sm">
+            <Shield size={16} className="mr-2" /> Review Claims ({stats.pendingClaims})
+          </Link>
+          <Link href="/admin/reviews" className="btn-outline text-sm">
+            <BarChart3 size={16} className="mr-2" /> Audit Reviews
+          </Link>
+        </div>
       </div>
     </div>
   );
