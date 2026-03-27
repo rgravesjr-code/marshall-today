@@ -57,12 +57,12 @@ export default async function BusinessDetailPage({ params }: Props) {
         {/* ============================================ */}
         <div className="lg:col-span-2 space-y-6">
           {/* Cover image */}
-          <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-marshall-100 to-cream-200 h-56 sm:h-72 lg:h-80">
+          <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-forest-100 to-cream-300 h-72 sm:h-80 lg:h-96">
             {business.cover_image_url ? (
               <img
                 src={business.cover_image_url}
                 alt={business.name}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-contain object-top p-2"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
