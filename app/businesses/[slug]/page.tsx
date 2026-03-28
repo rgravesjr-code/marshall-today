@@ -50,8 +50,8 @@ export default async function BusinessDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      {/* Back + Prev/Next navigation */}
-      <div className="flex items-center justify-between mb-6">
+      {/* Back link */}
+      <div className="mb-6">
         <Link
           href="/businesses"
           className="inline-flex items-center gap-1.5 text-marshall-500 hover:text-marshall-700 text-sm font-medium transition-colors"
@@ -59,46 +59,6 @@ export default async function BusinessDetailPage({ params }: Props) {
           <ArrowLeft size={16} />
           Back to Directory
         </Link>
-
-        <div className="flex items-center gap-2">
-          {prevBiz ? (
-            <Link
-              href={`/businesses/${prevBiz.slug}`}
-              className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-marshall-200 text-marshall-600 hover:border-marshall-400 hover:text-marshall-900 transition-colors"
-              title={prevBiz.name}
-            >
-              <ChevronLeft size={15} />
-              <span className="hidden sm:inline truncate max-w-[120px]">{prevBiz.name}</span>
-              <span className="sm:hidden">Prev</span>
-            </Link>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-marshall-100 text-marshall-300 cursor-not-allowed">
-              <ChevronLeft size={15} />
-              <span className="hidden sm:inline">Prev</span>
-            </span>
-          )}
-
-          <span className="text-xs text-marshall-400 hidden sm:block">
-            {idx + 1} of {allBusinesses.length}
-          </span>
-
-          {nextBiz ? (
-            <Link
-              href={`/businesses/${nextBiz.slug}`}
-              className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-marshall-200 text-marshall-600 hover:border-marshall-400 hover:text-marshall-900 transition-colors"
-              title={nextBiz.name}
-            >
-              <span className="hidden sm:inline truncate max-w-[120px]">{nextBiz.name}</span>
-              <span className="sm:hidden">Next</span>
-              <ChevronRight size={15} />
-            </Link>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-marshall-100 text-marshall-300 cursor-not-allowed">
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight size={15} />
-            </span>
-          )}
-        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -127,6 +87,33 @@ export default async function BusinessDetailPage({ params }: Props) {
                 ★ Featured Business
               </div>
             )}
+          </div>
+
+          {/* Prev / Next — right under the image */}
+          <div className="flex items-center justify-between gap-3">
+            {prevBiz ? (
+              <Link href={`/businesses/${prevBiz.slug}`}
+                className="flex items-center gap-2 text-sm text-marshall-600 hover:text-marshall-900 transition-colors group min-w-0">
+                <ChevronLeft size={16} className="shrink-0 text-marshall-400 group-hover:text-marshall-700" />
+                <div className="min-w-0">
+                  <div className="text-xs text-marshall-400 uppercase tracking-wide leading-none mb-0.5">Previous</div>
+                  <div className="font-medium truncate">{prevBiz.name}</div>
+                </div>
+              </Link>
+            ) : <div />}
+
+            <span className="text-xs text-marshall-300 shrink-0">{idx + 1} / {allBusinesses.length}</span>
+
+            {nextBiz ? (
+              <Link href={`/businesses/${nextBiz.slug}`}
+                className="flex items-center gap-2 text-sm text-marshall-600 hover:text-marshall-900 transition-colors group text-right min-w-0">
+                <div className="min-w-0">
+                  <div className="text-xs text-marshall-400 uppercase tracking-wide leading-none mb-0.5">Next</div>
+                  <div className="font-medium truncate">{nextBiz.name}</div>
+                </div>
+                <ChevronRight size={16} className="shrink-0 text-marshall-400 group-hover:text-marshall-700" />
+              </Link>
+            ) : <div />}
           </div>
 
           {/* Header */}
