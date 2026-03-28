@@ -85,7 +85,7 @@ export default async function BusinessDetailPage({ params }: Props) {
               <img
                 src={business.logo_url}
                 alt=""
-                className="w-16 h-16 rounded-xl object-cover border-2 border-marshall-100 shadow-sm flex-shrink-0"
+                className="w-16 h-16 rounded-xl object-contain border-2 border-marshall-100 shadow-sm flex-shrink-0 bg-white"
               />
             ) : (
               <div className="w-16 h-16 rounded-xl bg-forest-50 border-2 border-forest-100 flex items-center justify-center flex-shrink-0">
