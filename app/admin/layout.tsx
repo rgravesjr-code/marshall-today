@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { siteConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
-import { LayoutDashboard, MessageSquare, Send, BarChart3, Shield, Building2 } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Send, BarChart3, Shield, Building2, Users } from 'lucide-react';
 
 // This layout wraps all /admin pages
 // For production, you'd check Supabase auth session here
@@ -16,6 +16,7 @@ export default function AdminLayout({
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/businesses', label: 'Businesses', icon: Building2 },
+    { href: '/admin/contacts', label: 'Contacts', icon: Users },
     { href: '/admin/claims', label: 'Claims', icon: Shield },
     { href: '/admin/outreach', label: 'Outreach', icon: Send },
     { href: '/admin/responses', label: 'Responses', icon: MessageSquare },
