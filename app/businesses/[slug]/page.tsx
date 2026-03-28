@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { MapPin, Phone, Globe, Mail, Clock, ArrowLeft, ExternalLink, Facebook } from 'lucide-react';
+import { MapPin, Phone, Globe, Mail, Clock, ArrowLeft, ExternalLink, Facebook, ChevronLeft, ChevronRight } from 'lucide-react';
 import { siteConfig } from '@/lib/config';
 import { getBusinessBySlug, getBusinesses } from '@/lib/supabase';
 
@@ -30,9 +30,17 @@ export const revalidate = 60;
 
 export default async function BusinessDetailPage({ params }: Props) {
   const { slug } = await params;
-  const business = await getBusinessBySlug(slug);
+  const [business, allBusinesses] = await Promise.all([
+    getBusinessBySlug(slug),
+    getBusinesses(),
+  ]);
 
   if (!business) notFound();
+
+  // Prev / next navigation
+  const idx = allBusinesses.findIndex(b => b.slug === slug);
+  const prevBiz = idx > 0 ? allBusinesses[idx - 1] : null;
+  const nextBiz = idx < allBusinesses.length - 1 ? allBusinesses[idx + 1] : null;
 
   const dayNames = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   const dayLabels: Record<string, string> = {
@@ -42,14 +50,56 @@ export default async function BusinessDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      {/* Back link */}
-      <Link
-        href="/businesses"
-        className="inline-flex items-center gap-1.5 text-marshall-500 hover:text-marshall-700 text-sm font-medium mb-6 transition-colors"
-      >
-        <ArrowLeft size={16} />
-        Back to Directory
-      </Link>
+      {/* Back + Prev/Next navigation */}
+      <div className="flex items-center justify-between mb-6">
+        <Link
+          href="/businesses"
+          className="inline-flex items-center gap-1.5 text-marshall-500 hover:text-marshall-700 text-sm font-medium transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back to Directory
+        </Link>
+
+        <div className="flex items-center gap-2">
+          {prevBiz ? (
+            <Link
+              href={`/businesses/${prevBiz.slug}`}
+              className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-marshall-200 text-marshall-600 hover:border-marshall-400 hover:text-marshall-900 transition-colors"
+              title={prevBiz.name}
+            >
+              <ChevronLeft size={15} />
+              <span className="hidden sm:inline truncate max-w-[120px]">{prevBiz.name}</span>
+              <span className="sm:hidden">Prev</span>
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-marshall-100 text-marshall-300 cursor-not-allowed">
+              <ChevronLeft size={15} />
+              <span className="hidden sm:inline">Prev</span>
+            </span>
+          )}
+
+          <span className="text-xs text-marshall-400 hidden sm:block">
+            {idx + 1} of {allBusinesses.length}
+          </span>
+
+          {nextBiz ? (
+            <Link
+              href={`/businesses/${nextBiz.slug}`}
+              className="inline-flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg border border-marshall-200 text-marshall-600 hover:border-marshall-400 hover:text-marshall-900 transition-colors"
+              title={nextBiz.name}
+            >
+              <span className="hidden sm:inline truncate max-w-[120px]">{nextBiz.name}</span>
+              <span className="sm:hidden">Next</span>
+              <ChevronRight size={15} />
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg border border-marshall-100 text-marshall-300 cursor-not-allowed">
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight size={15} />
+            </span>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* ============================================ */}
@@ -127,10 +177,24 @@ export default async function BusinessDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Short description — shown prominently if no long description */}
+          {business.short_description && !business.description && (
+            <div className="card p-6 sm:p-8">
+              <p className="text-marshall-600 text-lg leading-relaxed italic">
+                {business.short_description}
+              </p>
+            </div>
+          )}
+
+          {/* Long description (with short description as lead-in if both exist) */}
           {business.description && (
             <div className="card p-6 sm:p-8">
               <h2 className="font-display text-lg font-semibold text-marshall-900 mb-3">About</h2>
+              {business.short_description && (
+                <p className="text-marshall-700 text-base font-medium leading-snug mb-3 pb-3 border-b border-marshall-100">
+                  {business.short_description}
+                </p>
+              )}
               <p className="text-marshall-600 leading-relaxed whitespace-pre-line">
                 {business.description}
               </p>
@@ -268,6 +332,35 @@ export default async function BusinessDetailPage({ params }: Props) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Bottom prev/next */}
+      <div className="mt-10 pt-6 border-t border-marshall-100 flex items-center justify-between gap-4">
+        {prevBiz ? (
+          <Link href={`/businesses/${prevBiz.slug}`}
+            className="flex items-center gap-2 text-sm text-marshall-600 hover:text-marshall-900 transition-colors group max-w-[45%]">
+            <ChevronLeft size={16} className="shrink-0 text-marshall-400 group-hover:text-marshall-700" />
+            <div className="min-w-0">
+              <div className="text-xs text-marshall-400 uppercase tracking-wide">Previous</div>
+              <div className="font-medium truncate">{prevBiz.name}</div>
+            </div>
+          </Link>
+        ) : <div />}
+
+        <Link href="/businesses" className="text-xs text-marshall-400 hover:text-marshall-600 transition-colors shrink-0">
+          All Businesses
+        </Link>
+
+        {nextBiz ? (
+          <Link href={`/businesses/${nextBiz.slug}`}
+            className="flex items-center gap-2 text-sm text-marshall-600 hover:text-marshall-900 transition-colors group text-right max-w-[45%]">
+            <div className="min-w-0">
+              <div className="text-xs text-marshall-400 uppercase tracking-wide">Next</div>
+              <div className="font-medium truncate">{nextBiz.name}</div>
+            </div>
+            <ChevronRight size={16} className="shrink-0 text-marshall-400 group-hover:text-marshall-700" />
+          </Link>
+        ) : <div />}
       </div>
     </div>
   );
