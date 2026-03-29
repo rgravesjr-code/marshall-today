@@ -21,8 +21,13 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-forest-600 to-forest-700 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-              <span className="text-white font-display font-bold text-lg sm:text-xl">M</span>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow bg-white border border-marshall-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://zplhkxrafsxxbzzlujrc.supabase.co/storage/v1/object/public/marshall-today/branding/logo-fountain.jpg"
+                alt="Marshall Today"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-lg sm:text-xl text-marshall-900 leading-tight">
