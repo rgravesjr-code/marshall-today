@@ -26,7 +26,7 @@ export default function Header() {
             </div>
             <div className="flex flex-col">
               <span className="font-display font-bold text-lg sm:text-xl text-marshall-900 leading-tight">
-                {siteConfig.city}
+                {siteConfig.city}{' '}
                 <span className="text-forest-600">Today</span>
               </span>
               <span className="text-[10px] sm:text-xs text-marshall-500 font-body leading-tight hidden sm:block">

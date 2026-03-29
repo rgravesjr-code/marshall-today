@@ -34,7 +34,7 @@ export default async function HomePage() {
             Shop Marshall
           </h1>
           <p className="text-xl sm:text-2xl text-white/90 font-sans mb-10 drop-shadow">
-            Shop Marshall Today!
+            Visit Marshall <em className="font-bold not-italic"><strong>Today</strong></em>
           </p>
 
           <HeroSearch />
